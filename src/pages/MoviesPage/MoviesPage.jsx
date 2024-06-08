@@ -1,43 +1,70 @@
-import { useState } from "react";
-import fetchMovies from "../../fetchMovies";
+import { useEffect, useState } from "react";
+import MovieList from "../../components/MovieList/MovieList";
+import { fetchMoviesByQuery } from "../../api/movies-api";
+import LoadMoreBtn from "../../components/LoadMoreBtn/LoadMoreBtn";
 import toast from "react-hot-toast";
 import css from "./MoviesPage.module.css";
+import { useSearchParams } from "react-router-dom";
 
 function MoviesPage() {
-  const path = "search/movie";
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-
-  async function fetchMoviesByQuery(query) {
-    try {
-      if (query) {
-        const data = await fetchMovies(`${path}?query=${query}`);
-        return data.results;
-      }
-    } catch (error) {
-      console.log(error);
-      return [];
+  const [userQuery, setUserQuery] = useState("");
+  const [searchedMovies, setSearchedMovies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [error, setError] = useState(false);
+  const [params, setParams] = useSearchParams();
+  
+  useEffect(() => {
+    if (!userQuery) {
+      return;
     }
-  }
+    const getMovies = async () => {
+      setIsLoading(true);
+      setError(false);
 
-  function handleOnChange(e) {
-    setQuery(e.target.value);
-  }
+      try {
+        const { data } = await fetchMoviesByQuery(userQuery, page);
+        setSearchedMovies((prev) => [...prev, ...data.results]);
+        setIsVisible(true);
+      } catch (error) {
+        setError(true);
+        toast.error("Error fetching movies, try again");
+      } finally {
+        setIsLoading(false);
+        setQuery("");
+      }
+    };
+    getMovies();
+  }, [userQuery, page]);
 
-  async function handleSubmit(e) {
+  const handleLoadMore = () => {
+    setPage(page + 1);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!query.trim()) {
       toast.error("Search query is required");
       return;
     }
-    const results = await fetchMoviesByQuery(query);
 
-    setMovies(results);
-    setQuery("");
-  }
+    setUserQuery(query);
+    setPage(1);
+  };
+
+  const handleOnChange = (e) => {
+    const value = e.target.value;
+
+    setQuery(value);
+    params.set("search", value);
+    setParams(params);
+  };
 
   return (
-    <div className={css.container}>
+    <>
       <h1>Movies Search</h1>
       <form onSubmit={handleSubmit}>
         <input
@@ -46,7 +73,7 @@ function MoviesPage() {
           autoComplete="off"
           autoFocus
           placeholder="Enter name of the film to search"
-          value={query}
+          value={query ?? ""}
           onChange={handleOnChange}
         />
         <button className={css.btn} type="submit">
@@ -54,21 +81,12 @@ function MoviesPage() {
         </button>
       </form>
 
-      <ul className={css.moviesList}>
-        {movies.map((movie) => (
-          <li key={movie.id} className={css.movieItem}>
-            <img
-              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-              alt={movie.title}
-            />
-            <div className={css.movieInfo}>
-              <h2 className={css.movieTitle}>{movie.title}</h2>
-              <p className={css.movieReleaseDate}>{movie.release_date}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+      {isLoading && <p>Loading..</p>}
+      {error && <p>Error loading movies</p>}
+
+      <MovieList movies={searchedMovies} />
+      {isVisible && <LoadMoreBtn onClick={handleLoadMore} />}
+    </>
   );
 }
 
