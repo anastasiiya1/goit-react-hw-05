@@ -7,10 +7,9 @@ import MovieCast from "../../components/MovieCast/MovieCast";
 import MovieReviews from "../../components/MovieReviews/MovieReviews";
 import clsx from 'clsx';
 
-const getClassName = ( {isActive}) =>{
-  return clsx(css.link, isActive && css.isActive)
-
-}
+const getClassName = ({ isActive }) => {
+  return clsx(css.link, isActive && css.isActive);
+};
 
 function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -18,15 +17,7 @@ function MovieDetailsPage() {
   const [selectedMovie, setSelectedMovie] = useState(
     location.state?.movie ?? ""
   );
-  const goBack = location.state ?? "/movies";
-
-  function MovieCastWrapper({ movieId }) {
-    return <MovieCast movieId={movieId} />;
-  }
-
-  function MovieReviewsWrapper({ movieId }) {
-    return <MovieReviews movieId={movieId} />;
-  }
+  const goBack = location.state?.from ?? { pathname: "/movies" }; 
 
   useEffect(() => {
     async function fetchDetails() {
@@ -67,10 +58,10 @@ function MovieDetailsPage() {
           <NavLink className={getClassName} to="reviews">Reviews</NavLink>
         </nav>
         <Routes>
-          <Route path="cast" element={<MovieCastWrapper movieId={movieId} />} />
+          <Route path="cast" element={<MovieCast movieId={movieId} />} />
           <Route
             path="reviews"
-            element={<MovieReviewsWrapper movieId={movieId} />}
+            element={<MovieReviews movieId={movieId} />}
           />
         </Routes>
       </div>

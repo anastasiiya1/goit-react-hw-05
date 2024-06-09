@@ -4,20 +4,22 @@ import { fetchMoviesByQuery } from "../../api/movies-api";
 import LoadMoreBtn from "../../components/LoadMoreBtn/LoadMoreBtn";
 import toast from "react-hot-toast";
 import css from "./MoviesPage.module.css";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 function MoviesPage() {
   const [query, setQuery] = useState("");
-  const [userQuery, setUserQuery] = useState("");
   const [searchedMovies, setSearchedMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState(false);
   const [params, setParams] = useSearchParams();
-  
+  const location = useLocation();
+
+  const searchQuery = params.get("search");
+
   useEffect(() => {
-    if (!userQuery) {
+    if (!searchQuery) {
       return;
     }
     const getMovies = async () => {
@@ -25,25 +27,26 @@ function MoviesPage() {
       setError(false);
 
       try {
-        const { data } = await fetchMoviesByQuery(userQuery, page);
-        setSearchedMovies((prev) => [...prev, ...data.results]);
-        setIsVisible(true);
+        const { data } = await fetchMoviesByQuery(searchQuery, page);
+        setSearchedMovies((prev) =>
+          page === 1 ? data.results : [...prev, ...data.results]
+        );
+        setIsVisible(data.results.length > 0);
       } catch (error) {
         setError(true);
         toast.error("Error fetching movies, try again");
       } finally {
         setIsLoading(false);
-        setQuery("");
       }
     };
     getMovies();
-  }, [userQuery, page]);
+  }, [searchQuery, page]);
 
   const handleLoadMore = () => {
-    setPage(page + 1);
+    setPage((prev) => prev + 1);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!query.trim()) {
@@ -51,16 +54,16 @@ function MoviesPage() {
       return;
     }
 
-    setUserQuery(query);
+    setParams({ search: query });
     setPage(1);
+
+    if (searchedMovies.length === 0) {
+      toast.error("No matching results found");
+    }
   };
 
   const handleOnChange = (e) => {
-    const value = e.target.value;
-
-    setQuery(value);
-    params.set("search", value);
-    setParams(params);
+    setQuery(e.target.value);
   };
 
   return (
@@ -73,7 +76,7 @@ function MoviesPage() {
           autoComplete="off"
           autoFocus
           placeholder="Enter name of the film to search"
-          value={query ?? ""}
+          value={query}
           onChange={handleOnChange}
         />
         <button className={css.btn} type="submit">
@@ -84,7 +87,10 @@ function MoviesPage() {
       {isLoading && <p>Loading..</p>}
       {error && <p>Error loading movies</p>}
 
-      <MovieList movies={searchedMovies} />
+      <MovieList
+        movies={searchedMovies}
+        state={{ from: location, searchQuery, page }} 
+      />
       {isVisible && <LoadMoreBtn onClick={handleLoadMore} />}
     </>
   );
