@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchMovieDetails } from "../../api/movies-api";
 import { Routes, Route, useLocation, useParams, NavLink } from "react-router-dom";
-import  BackLink  from "../../components/BackLink/BackLink";
+import BackLink from "../../components/BackLink/BackLink";
 import css from "./MovieDetailsPage.module.css";
 import MovieCast from "../../components/MovieCast/MovieCast";
 import MovieReviews from "../../components/MovieReviews/MovieReviews";
@@ -14,10 +14,9 @@ const getClassName = ({ isActive }) => {
 function MovieDetailsPage() {
   const { movieId } = useParams();
   const location = useLocation();
-  const [selectedMovie, setSelectedMovie] = useState(
-    location.state?.movie ?? ""
-  );
-  const returnBack = location.state?.from ?? { pathname: "/movies" }; 
+  const locationRef = useRef(location);
+
+  const [selectedMovie, setSelectedMovie] = useState(location.state?.movie ?? "");
 
   useEffect(() => {
     async function fetchDetails() {
@@ -40,7 +39,7 @@ function MovieDetailsPage() {
 
   return (
     <div className={css.container}>
-      <BackLink to={returnBack} className={getClassName}>
+      <BackLink to={locationRef.current.state?.from ?? "/movies"} className={getClassName}>
         Go back
       </BackLink>
       <div className={css.movieDetails}>
@@ -58,11 +57,8 @@ function MovieDetailsPage() {
           <NavLink className={getClassName} to="reviews">Reviews</NavLink>
         </nav>
         <Routes>
-          <Route path="cast" element={<MovieCast movieId={movieId} />} />
-          <Route
-            path="reviews"
-            element={<MovieReviews movieId={movieId} />}
-          />
+          <Route path="cast" element={<MovieCast />} />
+          <Route path="reviews" element={<MovieReviews />} />
         </Routes>
       </div>
     </div>
