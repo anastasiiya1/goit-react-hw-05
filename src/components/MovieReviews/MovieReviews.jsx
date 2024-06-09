@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchMovieReviews } from "../../api/movies-api";
+import { useLocation } from "react-router-dom";
+import BackLink from "../BackLink/BackLink";
 import FormattedDate from "../FormattedDate/FormattedDate";
 import css from "./MovieReviews.module.css";
 
 function MovieReviews({ movieId }) {
   const [reviews, setReviews] = useState([]);
+  const location = useLocation();
+  const goBack = location.state?.from ?? { pathname: `/movies/${movieId}` }; 
+
 
   useEffect(() => {
     async function fetchReviews() {
@@ -21,6 +26,7 @@ function MovieReviews({ movieId }) {
   return (
     <div className={css.container}>
       <h2>Reviews</h2>
+      <BackLink to={goBack}>Go back</BackLink>
       {reviews.length === 0 ? (
         <p>No reviews available for this movie.</p>
       ) : (

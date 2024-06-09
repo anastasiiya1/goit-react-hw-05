@@ -1,8 +1,12 @@
 import { fetchMovieCast } from "../../api/movies-api.js";
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import BackLink from "../BackLink/BackLink.jsx";
 
 function MovieCast({ movieId }) {
   const [cast, setCast] = useState([]);
+  const location = useLocation();
+  const goBacktoDetails = location.state?.from ?? { pathname: `/movies/${movieId}` }; 
 
   useEffect(() => {
     async function fetchCast() {
@@ -19,6 +23,7 @@ function MovieCast({ movieId }) {
   return (
     <div>
       <h2>Movie cast</h2>
+      <BackLink to={goBacktoDetails}>Go back</BackLink>
       {cast.length === 0 ? (
         <p> No cast information available</p>
       ) : (

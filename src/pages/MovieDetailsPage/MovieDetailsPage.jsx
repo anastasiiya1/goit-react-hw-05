@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchMovieDetails } from "../../api/movies-api";
 import { Routes, Route, useLocation, useParams, NavLink } from "react-router-dom";
-import { BackLink } from "../../components/BackLink/BackLink";
+import  BackLink  from "../../components/BackLink/BackLink";
 import css from "./MovieDetailsPage.module.css";
 import MovieCast from "../../components/MovieCast/MovieCast";
 import MovieReviews from "../../components/MovieReviews/MovieReviews";
@@ -17,7 +17,7 @@ function MovieDetailsPage() {
   const [selectedMovie, setSelectedMovie] = useState(
     location.state?.movie ?? ""
   );
-  const goBack = location.state?.from ?? { pathname: "/movies" }; 
+  const returnBack = location.state?.from ?? { pathname: "/movies" }; 
 
   useEffect(() => {
     async function fetchDetails() {
@@ -40,7 +40,7 @@ function MovieDetailsPage() {
 
   return (
     <div className={css.container}>
-      <BackLink to={goBack} className={getClassName}>
+      <BackLink to={returnBack} className={getClassName}>
         Go back
       </BackLink>
       <div className={css.movieDetails}>
